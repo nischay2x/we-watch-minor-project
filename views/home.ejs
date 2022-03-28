@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>WeWatch - Watch Together</title>
+
+    <!--Font awesome-->
+    <script src="https://kit.fontawesome.com/95105048e2.js" crossorigin="anonymous"></script>
+
+    <!-- google fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <!-- local-css -->
+    <link rel="stylesheet" href="./styles/global.css">
+  </head>
+  <body>
+
+    <header>
+        <nav class="navbar navbar-expand-lg">
+            <a href="/" class="navbar-brand">
+                <span class="logo">WeWatch</span>
+            </a>
+        </nav>
+    </header>
+
+    <main class="d-flex">
+        <div class="container m-auto"> 
+            <div class="w-100 h-100 glass card-body">
+                <div class="col-12 pt-2 text-white">
+                    <h4 style="font-weight: 600;">Create A new Watch Room</h4>
+                </div>
+                <form id="link-form" method="post">
+                    <div class="form-group d-flex flex-wrap justify-content-around">
+                        <input type="text" id="link-field" name="videoLink" placeholder="Enter YouTube Video Link" required class="form-control col-12 col-md-8 col-lg-6 col-xl-5 my-2">
+                        <input type="text" id="pass-field" name="password" placeholder="Enter a Password" required class="form-control col-12 col-md-8 col-lg-6 col-xl-5 my-2">
+                        <input type="text" id="name-field" name="name" placeholder="Enter Your Name" required class="form-control col-12 col-md-8 col-lg-6 col-xl-5 my-2">
+                        <!-- <label for="allow-control" class="form-label col-12 col-md-8 col-lg-6 col-xl-5 my-2 d-flex align-items-center p-0" style="gap: 10px;">
+                            Allow Controls for Joinees
+                            <input type="checkbox" name="allowControl" id="allow-control" class="form-check">
+                        </label> -->
+                        <div class="col-12 col-md-8 col-lg-6 col-xl-5 my-2 px-0">
+                            <button type="submit" class="btn btn-success">Generate</button>
+                        </div>
+                    </div>
+                </form>
+                <div class="col-12 col-md-10 mx-auto" style="display: none;" id="generated-div">
+                    <br>
+                    <div class="link-hold d-flex" style="gap: 1rem;">
+                        <input type="text" id="wwLink" disabled class="form-control">
+                        <button class="btn btn-primary" id="copy-link" ><i class="fas fa-copy"></i></button>
+                        <button class="btn btn-success" id="start-meeting">Start</button>
+                    </div>
+                </div>
+                <br>
+                <div class="col-12 pt-2 text-white">
+                    <h4 style="font-weight: 600;">Join A Watch Room</h4>
+                </div>
+                <form id="join-form" method="post" action="/join">
+                    <div class="form-group d-flex flex-wrap justify-content-around">
+                        <input type="text" id="j-link" name="jRoom" placeholder="Enter Room Id" required class="form-control col-12 col-md-8 col-lg-6 col-xl-5 my-2">
+                        <input type="text" id="j-pass" name="jPass" placeholder="Enter Joining Password" required class="form-control col-12 col-md-8 col-lg-6 col-xl-5 my-2">
+                        <input type="text" name="name" id="jName" placeholder="Enter Your Name" required class="form-control col-12 col-md-8 col-lg-6 col-xl-5 my-2">
+                        <div class="col-12 col-md-8 col-lg-6 col-xl-5 my-2">
+                            <button type="submit" class="btn btn-success">Join</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script defer>
+        const generateDiv = document.getElementById('generated-div');
+        const form = document.getElementById('link-form');
+        const linkField = document.getElementById('link-field');
+        const passField = document.getElementById('pass-field');
+        const nameField = document.getElementById('name-field')
+        const regex = new RegExp(/^(https|http)*(:\/\/)*(www\.)*(youtube|youtu)\.(com|be)\/(watch\?v=)*/);
+        const copyLink = document.getElementById('copy-link');
+        const genLinkField = document.getElementById('wwLink');
+        let genLink = "";
+        form.onsubmit = (e) => {
+            e.preventDefault();
+            const link = linkField.value;
+            if(!regex.test(link)){
+                alert("Please Enter a Valid YouTube Video Link")
+                linkField.value = "";
+            } else {
+                fetch('/api/generate', {
+                    method : "POST",
+                    body : JSON.stringify({ 
+                        videoLink : linkField.value, 
+                        password : passField.value,
+                        name : nameField.value,
+                        allowControls : true, // document.getElementById('allow-control').checked
+                    }),
+                    headers : {
+                        "Content-Type" : "application/json"
+                    }
+                }).then(response => response.json()).then(data =>{
+                    if(data.error) alert(data.msg)
+                    else {
+                        renderResponse(data.link)
+                        genLink = data.link;
+                    }
+                }).catch(err => {
+                    alert(err);
+                })
+            }
+        }
+        function renderResponse(link){
+            generateDiv.style.display = 'block';
+            genLinkField.value = link.replace("http://localhost:5000/watch/", "");
+        }
+        copyLink.onclick = (e) => {
+            let roomId = genLink.replace("http://localhost:5000/watch/", "");
+            navigator.clipboard.writeText(roomId);
+        }
+
+        document.getElementById('start-meeting').onclick = () => {
+            if(!genLink) alert("Invalid Link")
+            else window.location = genLink;
+        }
+    </script>
+  </body>
+</html>

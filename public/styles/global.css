@@ -1,0 +1,58 @@
+:root{
+    --primary :rgba(45, 106, 79, 1);
+    --primary-light : #1F996F;
+}
+
+header .logo{
+    font-weight: 600;
+    color: white;
+    font-size: 3rem;
+    text-shadow: 0 2px 5px gray;   
+}
+
+header{
+    font-family: 'Poppins', sans-serif;
+    position: absolute;
+    top: 0;
+    background: transparent;
+    width: 100%;
+    z-index: 2;
+}
+
+header nav .nav-item a.nav-link{
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    color: black !important;
+    text-transform: uppercase;
+    transition: all 0.2s ease;
+}
+
+header nav .nav-item a.nav-link:hover{
+    color: var(--primary-light) !important;
+}
+header nav .nav-item.active a.nav-link{
+    color : var(--primary-light) !important;
+}
+
+header.active{
+    background: #fff;
+    box-shadow: 0 0 5px var(--primary-light);
+}
+
+main{
+    font-family: 'Poppins', sans-serif;
+    width: 100%;
+    height: 100vh;
+    background: linear-gradient(to right bottom, #8aedf6, #60a2f5);
+}
+
+a{
+    color: inherit !important;
+}
+
+.glass{
+    background: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blue(4px);
+    border: 1px solid #fff;
+    border-radius: 10px;
+}

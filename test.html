@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>WeWatch - Watch Together</title>
+
+  <style>
+    html{
+      scroll-behavior: smooth;
+    }
+    header {
+      font-family: 'Poppins', sans-serif;
+      position: absolute;
+      top: 0;
+      background: transparent;
+      width: 100%;
+      z-index: 2;
+    }
+
+    header .logo {
+      font-weight: 600;
+      color: white;
+      font-size: 3rem;
+      text-shadow: 0 2px 5px gray;
+    }
+
+    main {
+      font-family: 'Poppins', sans-serif;
+      width: 100%;
+      height: 100vh;
+      background: linear-gradient(to right bottom, #8aedf6, #60a2f5);
+    }
+
+    a {
+      color: inherit !important;
+    }
+
+    .glass {
+      background: rgba(255, 255, 255, 0.3);
+      backdrop-filter: blue(4px);
+      border: 1px solid #fff;
+      border-radius: 10px;
+    }
+
+    div.chat{
+      width: 100%;
+      display: flex;
+    }
+    div.chat > div.hold{
+      max-width: 70%;
+      padding: 4px 7px;
+      border-radius: 10px;
+      background: #fff;
+      color: black;
+    }
+    div.chat.self > div.hold{
+      margin-left: auto;
+    }
+    div.chat div div.name{
+      width: 100%;
+      margin: 0;
+      font-size: 10px;
+      padding: 0;
+    }
+    div.chat.self div div.name{
+      text-align: right;
+      color: green;
+    }
+    div.chat div div.text{
+      font-size: 0.8rem;
+      line-height: 0.9rem;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .hide-scroll::-webkit-scrollbar{
+      display: none;
+    }
+  </style>
+
+
+  <!--Font awesome-->
+  <script src="https://kit.fontawesome.com/95105048e2.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"
+    integrity="sha384-fKnu0iswBIqkjxrhQCTZ7qlLHOFEgNkRmK2vaO/LbTZSXdJfAu6ewRBdwHPhBo/H"
+    crossorigin="anonymous"></script>
+
+  <!-- google fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap"
+    rel="stylesheet">
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+</head>
+
+<body>
+
+  <header>
+    <nav class="navbar navbar-expand-lg">
+      <a href="/" class="navbar-brand">
+        <span class="logo">WeWatch</span>
+      </a>
+    </nav>
+  </header>
+
+  <main class="d-flex">
+    <div class="m-auto container">
+      <div class="card-body">
+        <h2>
+          <%= room.owner%>'s Room
+        </h2>
+      </div>
+      <div class="w-100 glass card-body d-flex">
+        <div id="player"></div>
+        <div class="col">
+          <div class="h-100" style="min-width: 200px; max-height: 400px; position: relative;" id="chat-widow">
+            <div class="d-flex hide-scroll" id="chats-hold" style="flex-direction: column; height: 85%; max-height: 85%; padding-bottom: 10px; overflow-y: scroll; gap: 10px;">
+              <div class="chat self">
+                <div class="hold">
+                  <div class="name">Nischay</div>
+                  <div class="text">Some Text</div>
+                </div>
+              </div>
+              <div class="chat">
+                <div class="hold">
+                  <div class="name">Kanta</div>
+                  <div class="text">Some Text</div>
+                </div>
+              </div>
+            </div>
+            <div style="position: absolute; bottom: 0; width: 100%;">
+              <form id="chat-form" class="d-flex p-0" style="gap: 10px;">
+                <input type="text" placeholder="Say Something... " class="form-control" style="border-radius: 20px;" id="chat-input">
+                <button class="btn-success btn" type="submit" style="border-radius: 50%;"><i class="fas fa-paper-plane"></i></button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Initialize Socket
+    const socket = io('http://localhost:3000', {
+      reconnectionDelay: 1000,
+      reconnection: true,
+      reconnectionAttemps: 10,
+      transports: ['websocket'],
+      agent: false,
+      upgrade: false,
+      rejectUnauthorized: false
+    });
+
+    const { name, room } = parseCookie(document.cookie);
+
+    let tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    let firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+    let player;
+    function onYouTubeIframeAPIReady() {
+      player = new YT.Player('player', {
+        height: '390',
+        width: '640',
+        videoId: '<%= video.id%>',
+        playerVars: {
+          'playsinline': 1
+        },
+        events: {
+          'onReady': onPlayerReady,
+          'onStateChange': onPlayerStateChange
+        },
+      });
+    }
+
+    function onPlayerReady(event) {
+      console.log(parseCookie(document.cookie));
+      const data = {
+        name: name,
+        room: room
+      }
+      socket.emit('join', data)
+    }
+
+    socket.on('player', ({ video }) => {
+      console.log('from player server', video);
+      if (video.state !== player.getPlayerState()) {
+        switch(video.state){
+          case 1 : player.playVideo(); break;
+          case 2 : player.pauseVideo(); break;
+          case 3 : player.seekTo(video.current); break;
+          default : break;
+        }
+      }
+    })
+
+
+    async function onPlayerStateChange(event) {
+      const { playerInfo } = event.target;
+      const data = {
+        current : player.getCurrentTime(),
+        state : player.getPlayerState(),
+        room : room
+      }
+      
+      socket.emit("player", data);
+      console.log("local", data);
+    }
+
+    function parseCookie(string) {
+      let cookies = {};
+      string.split(";").forEach(c => {
+        let splited = c.split("=");
+        cookies[splited[0].replace(/\s/g, "")] = splited[1]
+      })
+      return cookies;
+    }
+
+    socket.on('chat', (data) => {
+      appendChat(data.text, data.name, false);
+    })
+
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = document.getElementById('chat-input');
+    chatForm.onsubmit = (e) => {
+      e.preventDefault();
+      if(chatInput.value){
+        socket.emit('chat', { room, name, text : chatInput.value })
+        appendChat(chatInput.value, name, true)
+      }
+    }
+    const chatHold = document.getElementById('chats-hold');
+
+    function appendChat(text, name, self){
+      let chatDiv = document.createElement('div');
+      chatDiv.classList.add('chat');
+      if(self) chatDiv.classList.add('self');
+        let inner = document.createElement('div');
+        inner.classList.add('hold');
+          let nameDiv = document.createElement('div')
+          nameDiv.classList.add('name');
+          nameDiv.innerHTML = name;
+          let textDiv = document.createElement('div');
+          textDiv.classList.add('text')
+          textDiv.innerHTML = text;
+        
+          inner.appendChild(nameDiv)
+          inner.append(textDiv);
+        chatDiv.appendChild(inner);
+
+      chatHold.appendChild(chatDiv);
+      chatInput.value = "";
+      chatHold.scrollTo(0, chatHold.scrollHeight)
+    }
+  </script>
+</body>
+
+</html>
